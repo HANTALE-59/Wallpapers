@@ -12,7 +12,7 @@ from pathlib import Path
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'}
 
 # Dossiers à ignorer
-IGNORE_FOLDERS = {'prewiew', '.git', '__pycache__', 'node_modules'}
+IGNORE_FOLDERS = {'prewiew', '.git', '__pycache__', 'node_modules','Moi'}
 
 def find_images(base_path):
     """Trouve toutes les images dans le répertoire et ses sous-dossiers"""
