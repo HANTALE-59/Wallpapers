@@ -877,12 +877,20 @@
         // Initialisation
         function init() {
             // Préparer les données
-            allImages = wallpapers.flatMap(item => 
-                item.images.map(img => ({
-                    folder: item.folder,
-                    name: img,
-                    path: `../${item.folder}/${img}`
-                }))
+            allImages = wallpapers.flatMap(item =>
+                item.images.map(img => {
+                    const folder = item.folder;
+                    const name = img;
+                    // Encodage des segments pour les espaces et caractères spéciaux (GitHub Pages est sensible)
+                    const encFolder = folder.split('/')
+                        .filter(Boolean)
+                        .map(encodeURIComponent)
+                        .join('/');
+                    const encImg = encodeURIComponent(img);
+                    // Si les fichiers sont à la racine (folder === 'root'), le chemin est juste le nom du fichier.
+                    const path = folder === 'root' ? `${encImg}` : `${encFolder}/${encImg}`;
+                    return { folder, name, path };
+                })
             );
 
             // Si aucune image n'est trouvée, afficher un message
