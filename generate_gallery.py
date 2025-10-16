@@ -93,24 +93,24 @@ def update_html_file(html_path, wallpapers):
     return True
 
 def main():
-    # Chemin du projet (parent du dossier prewiew)
+    # Chemin du dossier contenant index.html (dossier prewiew)
     script_dir = Path(__file__).parent
-    project_root = script_dir.parent
+    project_root = script_dir  # On scanne uniquement le dossier actuel
     html_file = script_dir / 'index.html'
-    
+
     print("🔍 Scanning pour des wallpapers...")
     print(f"📂 Dossier racine: {project_root}")
-    
+
     # Trouver toutes les images
     wallpapers = find_images(project_root)
-    
+
     # Statistiques
     total_images = sum(len(item['images']) for item in wallpapers)
     print(f"\n✅ Trouvé {total_images} images dans {len(wallpapers)} dossiers:")
-    
+
     for item in wallpapers:
         print(f"   📁 {item['folder']}: {len(item['images'])} images")
-    
+
     # Mettre à jour le fichier HTML
     print(f"\n📝 Mise à jour de {html_file.name}...")
     if update_html_file(html_file, wallpapers):
@@ -119,7 +119,7 @@ def main():
     else:
         print("❌ Échec de la mise à jour du fichier HTML")
         return 1
-    
+
     return 0
 
 if __name__ == '__main__':
