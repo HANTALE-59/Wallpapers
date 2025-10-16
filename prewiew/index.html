@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallpapers Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .folder-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .folder-btn {
+            padding: 10px 20px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .folder-btn:hover,
+        .folder-btn.active {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .gallery-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .image-container {
+            width: 100%;
+            height: 250px;
+            overflow: hidden;
+            background: #f0f0f0;
+            position: relative;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .image-info {
+            padding: 15px;
+        }
+
+        .image-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .image-folder {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            padding: 50px;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            padding: 50px;
+            display: none;
+        }
+
+        /* Modal pour agrandir les images */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .modal-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 30px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ Wallpapers Gallery</h1>
+            <p class="subtitle">Collection de fonds d'écran</p>
+        </header>
+
+        <div class="filters">
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Rechercher un wallpaper...">
+            <div class="folder-filter" id="folderFilter">
+                <button class="folder-btn active" data-folder="all">Tous</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">Chargement des wallpapers...</div>
+        <div class="no-results" id="noResults">Aucun wallpaper trouvé</div>
+        <div class="gallery" id="gallery"></div>
+    </div>
+
+    <!-- Modal pour agrandir les images -->
+    <div class="modal" id="modal">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div class="modal-info" id="modalInfo"></div>
+    </div>
+
+    <script>
+        // Configuration des dossiers et images
+        const wallpapers = [
+            { folder: 'Arch', images: [
+                '0PuSwi8.png',
+                '4k-Arch-Planet.png',
+                '8GFYbPF.png',
+                'ArchWaveBlack.png',
+                'ArchWaveMono.png',
+                'ArchWaveMonoInverted.png',
+                'EU90MsM.jpg',
+                'Ecn0qEh.jpeg',
+                'EcwKePa.jpeg',
+                'PwVfvIk.png',
+                'Vm83FeC.png',
+                'XCx0bJS.jpeg',
+                'd3.jpg',
+                'inWXyXz.jpeg',
+                'vHbO5jR.jpg',
+            ]},
+            { folder: 'AwsomeWallpaper', images: [
+                'b-265.jpg',
+                'b-274.jpg',
+                'b-280.jpg',
+                'b-297.jpg',
+                'b-345.jpg',
+                'b-378.jpg',
+                'b-383.jpg',
+                'b-390.jpg',
+                'b-395.jpg',
+                'b-398.jpg',
+                'b-400.jpg',
+                'b-401.jpg',
+                'b-409.jpg',
+                'b-413.jpg',
+                'b-505.jpg',
+                'b-591.jpg',
+                'b-723.jpg',
+                'b-727.jpg',
+                'b-731.jpg',
+                'b-801.jpg',
+                'b-810.jpg',
+                'b-847.jpg',
+                'b-848.jpg',
+                'b-880.jpg',
+            ]},
+            { folder: 'Cars', images: [
+                'Cars1.jpg',
+                'Cars2.jpg',
+                'Cars3.jpg',
+                'Cars4.jpg',
+                'Cars5.jpg',
+                'Cars6.jpg',
+                'Cars7.jpg',
+                'Cars8.png',
+            ]},
+            { folder: 'Download', images: [
+                '506LfWz.png',
+                'A.png',
+                'bg-4.jpg',
+                'bg-5.png',
+                'car.png',
+                'idk.jpg',
+                'never_ending_road.jpg',
+                'perfect-blue.jpg',
+                'spirited-away.png',
+                'ssr_gt.png',
+                'underwater_2.png',
+            ]},
+            { folder: 'GHostOfTsushima', images: [
+                '1363458.png',
+                '20251011012057.png',
+                '20251011012100.png',
+                '20251011012222.png',
+                '20251012173044.png',
+                '20251012173448.png',
+                '20251012173647.png',
+                '20251012175812.png',
+                '20251012232431.png',
+                '20251013202230.png',
+                '20251013202234.png',
+                '20251013202249.png',
+                '20251013202253.png',
+                '20251013210028.png',
+                '20251013214119.png',
+                '20251013214725.png',
+                '20251013214738.png',
+                '20251013215016.png',
+                '20251013215421.png',
+                '20251014121219.png',
+                '20251014123349.png',
+                '20251014123549.png',
+                '20251015134943.png',
+                '20251015135018.png',
+                '20251015135620.png',
+                '20251015135721.png',
+                'thumb-1920-1363457.jpeg',
+            ]},
+            { folder: 'Hyde', images: [
+                '1 rain_world.png',
+                '2 rain_world.png',
+                '3 rain_world.png',
+                'Nordic-Heroin.png',
+                'abstract_blured.jpg',
+                'aesthetic_deer.png',
+                'apex_octane.jpg',
+                'arcade_decay_red.png',
+                'aurora_borealis.png',
+                'beach.jpg',
+                'blue_desert.png',
+                'blue_swirl.png',
+                'boat_abondoned.jpg',
+                'burning_cherry.jpeg',
+                'cat_leaves.png',
+                'cat_lofi_cafe.jpg',
+                'cat_minimal.jpg',
+                'catppuccinLogo.png',
+                'chainsaw_angel_lake.jpg',
+                'chainsaw_makima.png',
+                'cloudy_crescent.png',
+                'cloudy_mountain.png',
+                'dark_purple_kimono.png',
+                'delorean_pastel.png',
+                'edger_lucy_neon.jpg',
+                'escape_velocity.jpg',
+                'evening_sky.png',
+                'ferris_wheel.jpg',
+                'finalizer.png',
+                'firewatch.jpg',
+                'flying_out.png',
+                'forest.jpg',
+                'forest_dark_winter.jpg',
+                'future_town.jpg',
+                'gameboy.png',
+                'gas_station.gif',
+                'glitch fox.png',
+                'gojo.png',
+                'hanged_man_tree.jpg',
+                'japan_lake.jpg',
+                'japan_mountain_pink.jpg',
+                'japan_tower_pink.jpg',
+                'japanese_aesthetic.png',
+                'jormungandr.jpg',
+                'lake_mountain.jpg',
+                'lakeside_sunset.png',
+                'limbo.jpg',
+                'lowpoly_street.png',
+                'material_pastel_4.jpg',
+                'min_forest.jpg',
+                'min_mountain.jpg',
+                'minimal_squares.png',
+                'misty_forest.jpg',
+                'moments_before_desk.png',
+                'mountain_dragon_pink.jpg',
+                'mountain_snow.jpg',
+                'mountain_sunset.jpg',
+                'mountains.jpg',
+                'mushrooms_1.png',
+                'mushrooms_2.png',
+                'mushrooms_3.png',
+                'mushrooms_4.png',
+                'nier_2b.jpg',
+                'nier_mech.jpg',
+                'night_city.png',
+                'night_moon.png',
+                'nimbus.gif',
+                'palm trees.jpg',
+                'patterns.jpg',
+                'range.png',
+                'rebellious_tower.png',
+                'red_purple.jpg',
+                'reindeer_forest.jpg',
+                'rocket.jpg',
+                'rocket_launch.png',
+                'samurai_bebop.png',
+                'samurai_strike.jpg',
+                'sekiro.jpg',
+                'shaded_landscape.jpg',
+                'spring_bloom.jpg',
+                'street.gif',
+                'street.png',
+                'sunset.jpg',
+                'switch_swirl.jpg',
+                'teal_mountain.png',
+                'tokyo_pink.png',
+                'underwater.png',
+                'waifu_angel.jpg',
+                'waifu_jasmin.jpg',
+                'waifu_pink.png',
+                'wall.jpg',
+                'wall_paint.jpg',
+                'warm_afternoon.jpeg',
+                'waves.jpg',
+                'wild.png',
+            ]},
+            { folder: 'Hyde/Abyssal-Wave', images: [
+                'bg-1.png',
+                'bg-10.png',
+                'bg-11.png',
+                'bg-12.png',
+                'bg-13.png',
+                'bg-15.png',
+                'bg-16.png',
+                'bg-17.png',
+                'bg-18.png',
+                'bg-2.png',
+                'bg-3.png',
+                'bg-4.jpg',
+                'bg-5.png',
+                'bg-7.png',
+                'bg-8.png',
+            ]},
+            { folder: 'Hyde/Code Garden', images: [
+                'art.png',
+                'aurora.png',
+                'beer.jpg',
+                'bunnies.jpg',
+                'cabin.jpg',
+                'calligraphy.jpg',
+                'citrus.jpg',
+                'deer.jpg',
+                'drive.jpg',
+                'ducks.jpg',
+                'e33.jpeg',
+                'fires.jpg',
+                'fox.jpg',
+                'friends.jpg',
+                'gojo.jpg',
+                'ivy.jpg',
+                'journey.png',
+                'kayle.jpg',
+                'landscape.jpg',
+                'love.jpg',
+                'magic.jpg',
+                'messmer.jpg',
+                'nebula.jpg',
+                'oasis.jpg',
+                'pyramid.jpg',
+                'recluse.jpg',
+                'rising.png',
+                'sbr.jpg',
+                'snow.png',
+                'spike.png',
+                'sunset.jpg',
+                'transit.jpg',
+                'trina.jpg',
+                'walk.jpg',
+                'window.jpg',
+                'yorha.jpg',
+                'zen.png',
+            ]},
+            { folder: 'Hyde/Cosmic Blue', images: [
+                'A.png',
+                'B.png',
+                'C.png',
+            ]},
+            { folder: 'Hyde/DoomBringers', images: [
+                '1 Abandoned Battlefield.jpg',
+                '2 The Tower.jpg',
+                '3 Ethereal Abyss.jpg',
+                '4 Cosmic Rift.jpg',
+                '5 Strive.jpg',
+                '6 Alone.jpg',
+                '7 Void.png',
+                '8 The Horizon.jpg',
+                '9 The Cliphs.jpg',
+            ]},
+            { folder: 'Hyde/Green Lush', images: [
+                '云和山风景.PNG',
+                '夜色归途.png',
+                '山雨如晦.png',
+                '幽谷秘境.png',
+                '情色海湾.png',
+                '日出.png',
+                '森林中的书店.png',
+                '灯火阑珊.png',
+                '绿色房子.PNG',
+                '绿色道路.PNG',
+                '自由阶梯.JPG',
+                '艳阳天.png',
+                '轩榭晨光.png',
+                '这是什么.PNG',
+                '铁道天桥.png',
+                '静夜幽.PNG',
+                '静夜幽居.png',
+            ]},
+            { folder: 'Hyde/Moonlight', images: [
+                'A.png',
+                'B.png',
+                'C.png',
+            ]},
+            { folder: 'Hyde/Obsidian-Purple', images: [
+                '124.jpg',
+                'awb.jpg',
+                'erw.jpg',
+                'flower.jpg',
+                'flowers.png',
+                'forest.jpg',
+                'grass.jpg',
+                'hollow_knight.jpg',
+                'htyr.png',
+                'space.jpg',
+                'street_light.jpg',
+                'xewb.png',
+            ]},
+            { folder: 'Hyde/Rain Dark', images: [
+                'rain_dark_1.png',
+                'rain_dark_2.jpg',
+                'rain_girl_door.jpg',
+                'rain_girl_umbrella.jpg',
+                'rain_group.png',
+                'rain_in_genshin.jpg',
+                'street_car.jpg',
+                'tokyo_bus.jpg',
+                'tokyo_streets.jpg',
+                'umbrella_street.jpg',
+            ]},
+            { folder: 'Hyde/Scarlet Night', images: [
+                'Accented Red.png',
+                'Ferrari.png',
+                'Horns Red.png',
+                'Ninja Red.png',
+                'Red Hair.jpg',
+                'Red Jacket.png',
+                'Side Red.png',
+                'Standing girl.png',
+                'Sword Black.png',
+                'Sword Silver Hair.png',
+                'Tatto Red.png',
+                'Warrior Silver Sword.png',
+                'Wings Dark.png',
+                'Wings Split.png',
+            ]},
+            { folder: 'Hyde/Timeless Dream', images: [
+                'B.png',
+                'C.png',
+                'D.png',
+            ]},
+            { folder: 'Jakoolit', images: [
+                '404-page_not_found.png',
+                'Abstract - Nature.jpg',
+                'Anime - Landscape.jpeg',
+                'Anime-City-Night.png',
+                'Anime-Girl-Night-Sky.jpg',
+                'Anime-Girl-Rain.png',
+                'Anime-Girl1.png',
+                'Anime-Girl2.png',
+                'Anime-Girl3.png',
+                'Anime-Girl4.png',
+                'Anime-Girl5.png',
+                'Anime-Japan-Street.png',
+                'Anime-Purple-eyes.png',
+                'Anime-Room.png',
+                'Arcade_decay_red.png',
+                'Arch-chan_to.png',
+                'Backyard.png',
+                'Balcony-ja.png',
+                'Beer-Girl.png',
+                'Bonsai-Plant.png',
+                'Buildings.png',
+                'Candle-Photo.png',
+                'Cartoon.png',
+                'City-Night.png',
+                'City-Rain.png',
+                'City-Rainy-Night.png',
+                'Classroom.png',
+                'Coffee-1.png',
+                'Coffee-2.png',
+                'Concept-Japanese house.png',
+                'Courtside-Sunset.png',
+                'Crater.png',
+                'CuteCat.png',
+                'Dark_Nature.png',
+                'Dreamy-Aesthetic-Home-Under-Moonlight.png',
+                'Evangelion.png',
+                'Fantasy - Mountain Lake.jpeg',
+                'Fantasy - Mountain Sky.jpeg',
+                'Fantasy - Sunset.png',
+                'Fantasy-Autumn.png',
+                'Fantasy-Garden.png',
+                'Fantasy-Hongkong.png',
+                'Fantasy-IcyMountain.png',
+                'Fantasy-Japanese-Street.png',
+                'Fantasy-Lake1.png',
+                'Fantasy-Lake2.png',
+                'Fantasy-Lake3.png',
+                'Fantasy-Landscape1.png',
+                'Fantasy-Landscape2.png',
+                'Fantasy-Landscape3.png',
+                'Fantasy-Lanscape-Night.png',
+                'Fantasy-Medieval_Travern.png',
+                'Fantasy-Mountain.png',
+                'Fantasy-Snow-Valley.png',
+                'Fantasy-Waterfall.png',
+                'Flower-1.png',
+                'Flower-2.png',
+                'Flower-3.png',
+                'Fog-Forest-Everforest.png',
+                'Game-GTA.png',
+                'Garage.jpg',
+                'IT_guy.png',
+                'Lake.png',
+                'Linux-user-Room.png',
+                'Lofi - Anime Girl Balcony.jpeg',
+                'Lofi - Anime Girl Coder.jpeg',
+                'Lofi - Anime Girl.jpeg',
+                'Lofi - Anime Girl2.png',
+                'Lofi - Chill Room.png',
+                'Lofi - Chill Room2.jpeg',
+                'Lofi - Study.png',
+                'Lofi-Anime-Room.png',
+                'Lofi-Cafe1.png',
+                'Lofi-Cafe2.png',
+                'Lofi-Computer.png',
+                'Lofi-Desktop-Man-Studying.png',
+                'Lofi-Kitchen.png',
+                'Lofi-Room.png',
+                'Lofi-Urban-Nightscape.png',
+                'Lofi_Cat.png',
+                'Lowpoly_Street.png',
+                'Manga-Girl-Rain.png',
+                'Manga-Portal.png',
+                'Manga-Shrine.png',
+                'Mecha-Nostalgia.png',
+                'Messy-Room.jpg',
+                'Minimal_Squares.png',
+                'Mountain.png',
+                'Nature - Concept Butterflies.png',
+                'Nature - Flower.png',
+                'Nature - Lake.png',
+                'Nature - Waterfall.jpg',
+                'Nature.png',
+                'Night monochrome.jpg',
+                'Night_City.png',
+                'Northern Lights1.jpg',
+                'Northern Lights2.jpg',
+                'Northern Lights3.png',
+                'Northern Lights4.jpg',
+                'Northern Lights5.jpg',
+                'Northern Lights6.png',
+                'Pastel-Window.png',
+                'Patterns.png',
+                'Pstel-Window.png',
+                'Red_Eclipse.png',
+                'Relaxed_Mario.png',
+                'Resthouse.png',
+                'Retro - Programmer.jpeg',
+                'Riding in a bus.png',
+                'River.png',
+                'Scifi-Room.png',
+                'Space-Nebula.png',
+                'Staircase.png',
+                'Street-1.png',
+                'Street-2.png',
+                'Study-table.png',
+                'Summer-Mojito.png',
+                'Sun-Setting-Horizon.png',
+                'Sunset-Forrest.png',
+                'Sunset-room.png',
+                'Techno-Geek.png',
+                'Tokyo_Pink.png',
+                'Tower-Night.png',
+                'True Love.jpg',
+                'Under_Starlit_Sky.png',
+                'Video Game - The Blackstreets.jpeg',
+                'girl-laying-down.jpg',
+            ]},
+            { folder: 'Jakoolit/Dynamic-Wallpapers/Dark', images: [
+                'Beach-Dark.png',
+                'City_dark.png',
+                'Dessert-Dark.png',
+                'Forest-Dark.png',
+                'Fuji-Dark.png',
+                'Garden-Dark.png',
+                'Lady-Dark.png',
+                'Mountain_dark.png',
+                'Riverside-Dark.png',
+                'Summer-Scene-Dark.png',
+                'Tree_dark.png',
+                'Village-Dark.png',
+                'highway_dark.png',
+                'japan-street-Dark.png',
+                'kitty_dark.png',
+            ]},
+            { folder: 'Jakoolit/Dynamic-Wallpapers/Light', images: [
+                'Beach_light.png',
+                'City_light.png',
+                'Dessert_light.png',
+                'Forest-Light.png',
+                'Fuji_light.png',
+                'Garden-Light.png',
+                'Lady-Light.png',
+                'Mountain_light.png',
+                'Riverside_light.png',
+                'Summer-Scene-Light.png',
+                'Tree_light.png',
+                'Village-Light.png',
+                'highway_light.png',
+                'japan-street-Light.png',
+                'kitty_light.png',
+            ]},
+            { folder: 'Moi', images: [
+                'GOPR8918.JPG',
+                'Marjorie & Amaury 2024 (340 sur 440).jpg',
+                'Marjorie & Amaury 2024 (341 sur 440).jpg',
+                'Marjorie & Amaury 2024 (373 sur 440).jpg',
+            ]},
+            { folder: 'Ships', images: [
+                'wallpaperflare.com_wallpaper (10).png',
+                'wallpaperflare.com_wallpaper (4).png',
+                'wallpaperflare.com_wallpaper (5).png',
+                'wallpaperflare.com_wallpaper (6).png',
+                'wallpaperflare.com_wallpaper (7).png',
+                'wallpaperflare.com_wallpaper (8).png',
+                'wallpaperflare.com_wallpaper (9).png',
+            ]},
+            { folder: 'StarWars', images: [
+                '1064311.jpg',
+                '1096381.jpg',
+                'SW1.png',
+                'SW2.jpg',
+                'SW3.png',
+                'SW4.png',
+                'SW5.png',
+                'SW6.png',
+                'SW7.png',
+                'vert.png',
+            ]},
+            { folder: 'Zorin', images: [
+                'Canyon-by-Ashim-DSilva.jpg',
+                'Dark-Z17Pro.jpg',
+                'Desert-Cube-Z17Pro.jpg',
+                'Desert-by-Guillermo.jpg',
+                'Dune-by-Mikk-Tonissoo.jpg',
+                'Fabric-Z17Pro.jpg',
+                'Glass-Cubes-Z17Pro.jpg',
+                'Green-Hills-by-Massimiliano-Morosinotto.jpg',
+                'Loop-Z17Pro.jpg',
+                'Metal-Cubes-Z17Pro.jpg',
+                'Monument-Valley-by-Explore-with-Joshua.jpg',
+                'Oil-Bubble-Z17Pro.jpg',
+                'Orange-Z17Pro.jpg',
+                'Path-by-Jonathan-Formento.jpg',
+                'Planet-Zorin.jpg',
+                'Refraction-Z17Pro.jpg',
+                'Sea-by-Eberhard-Grossgasteiger.jpg',
+                'Shore-by-Sergi-Ferrete.jpg',
+                'Spheres-Z17Pro.jpg',
+                'Tessellation-Z17Pro.jpg',
+                'Tiles-by-Bernard-Hermant.jpg',
+                'Tree-Bloom-by-Claudio-Testa.jpg',
+                'Valley-by-Bailey-Zindel.jpg',
+                'Waves-by-Angus-Gray.jpg',
+                'Wood-by-Tod-S.jpg',
+                'X-Z17Pro.jpg',
+                'Zorin-Dark.jpg',
+                'Zorin.jpg',
+            ]},
+            { folder: 'black_hole', images: [
+                '1197977.jpg',
+                '1315742.jpg',
+                'balck_hole.png',
+                'black_hole10.jpg',
+                'black_hole11.png',
+                'black_hole2.png',
+                'black_hole4.jpg',
+                'black_hole5.jpg',
+                'black_hole6.jpg',
+                'black_hole7.jpg',
+                'black_hole8.jpg',
+                'black_hole9.jpg',
+                'block_hole_3.png',
+            ]},
+            { folder: 'root', images: [
+                '7dVfdIh-feF_femsùtemplar-wallpaper.jpg',
+                '7dVfdIh-templar-wallpaper.jpg',
+                '965847-3840x2160-desktop-4k-oscar-isaac-moon-knight-wallpaper-image.jpg',
+                'RoMaNtIcKhAi.jpg',
+                'Untitled.png',
+                'anime.png',
+                'anime2.png',
+                'astronaut.png',
+                'ddecipa-f84784ba-bb41-4e39-8c69-87ebf57c2722.png',
+                'dzfe1096381.jpg',
+                'esfwallhaven.png',
+                'got_bw.jpg',
+                'japanese_aesthetic.png',
+                'japanese_aesthetic2.jpg',
+                'japanese_aesthetic3.png',
+                'japenes thinfkoes.jpg',
+                'luciole1.jpeg',
+                'luciole2.jpeg',
+                'luciole3.jpeg',
+                'moon-knight-daredevil-born-again-ub.jpg',
+                'neoclassical-medieval-portrait-knight-illustration.jpg',
+                'peakpx.jpg',
+                'pink-katana.png',
+                'pixel-waterfall.webp',
+                'pixel_sakura_static.png',
+                'sedai_1991.jpg',
+                'ultrawide_island.png',
+                'wallpaper111111.jpg',
+                'wallpaperflare japnejfnse.jpg',
+                'wallpaperflare.com_wallpaper(3).jpg',
+                'wallpaperflare.com_wallpaper(4).jpg',
+                'wallpaperflare.com_wallpaper(5).jpg',
+                'wallpaperflare.com_wallpaper(6).jpg',
+                'wallpaperflare.com_wallpaper(8).jpg',
+                'wallpaperflare.com_wallpaper.jpg',
+                'waterfall.gif',
+                'wp13336127-japanese-people-wallpapers.jpg',
+                'wp13336145-japanese-people-wallpapers.jpg',
+                'xLEO1KI-templar-wallpaper.jpg',
+                '【dz哲风壁纸】夕阳-水边-波光水面.png',
+                '【哲风壁纸】古建筑壁纸-壁纸.png',
+                '【哲风壁纸】壮丽雪山-天空.png',
+                '【哲风壁纸】夕阳-水边-波光水面.png',
+                '【哲风壁纸】夜晚-暗夜氛围.png',
+                '【哲风壁纸】少女写真-森系少女.png',
+            ]},
+        ];
+
+        let allImages = [];
+        let filteredImages = [];
+        let currentFilter = 'all';
+
+        // Initialisation
+        function init() {
+            // Préparer les données
+            allImages = wallpapers.flatMap(item => 
+                item.images.map(img => ({
+                    folder: item.folder,
+                    name: img,
+                    path: `../${item.folder}/${img}`
+                }))
+            );
+
+            // Si aucune image n'est trouvée, afficher un message
+            if (allImages.length === 0) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('noResults').style.display = 'block';
+                document.getElementById('noResults').innerHTML = `
+                    <p>⚠️ Configuration requise</p>
+                    <p style="font-size: 0.8em; margin-top: 20px;">
+                        Veuillez éditer le fichier HTML et remplir le tableau 'wallpapers' avec vos images.<br>
+                        Ou utilisez le script de génération automatique.
+                    </p>
+                `;
+                return;
+            }
+
+            filteredImages = [...allImages];
+            
+            // Créer les boutons de filtres
+            createFolderFilters();
+            
+            // Afficher la galerie
+            renderGallery();
+            
+            // Event listeners
+            document.getElementById('searchBox').addEventListener('input', handleSearch);
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Créer les boutons de filtres
+        function createFolderFilters() {
+            const folders = [...new Set(wallpapers.map(item => item.folder))];
+            const filterContainer = document.getElementById('folderFilter');
+            
+            folders.forEach(folder => {
+                const btn = document.createElement('button');
+                btn.className = 'folder-btn';
+                btn.textContent = folder.split('/').pop();
+                btn.dataset.folder = folder;
+                btn.addEventListener('click', () => handleFolderFilter(folder));
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        // Gérer les filtres par dossier
+        function handleFolderFilter(folder) {
+            currentFilter = folder;
+            
+            // Update active button
+            document.querySelectorAll('.folder-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.folder === folder || (folder === 'all' && btn.dataset.folder === 'all')) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (folder === 'all') {
+                filteredImages = [...allImages];
+            } else {
+                filteredImages = allImages.filter(img => img.folder === folder);
+            }
+            
+            renderGallery();
+        }
+
+        // Gérer la recherche
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                if (currentFilter === 'all') {
+                    filteredImages = [...allImages];
+                } else {
+                    filteredImages = allImages.filter(img => img.folder === currentFilter);
+                }
+            } else {
+                const baseImages = currentFilter === 'all' ? allImages : allImages.filter(img => img.folder === currentFilter);
+                filteredImages = baseImages.filter(img => 
+                    img.name.toLowerCase().includes(searchTerm) || 
+                    img.folder.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            renderGallery();
+        }
+
+        // Afficher la galerie
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            const noResults = document.getElementById('noResults');
+            
+            if (filteredImages.length === 0) {
+                gallery.innerHTML = '';
+                noResults.style.display = 'block';
+                noResults.textContent = 'Aucun wallpaper trouvé';
+                return;
+            }
+            
+            noResults.style.display = 'none';
+            
+            gallery.innerHTML = filteredImages.map(img => `
+                <div class="gallery-item" onclick="openModal('${img.path}', '${img.name}', '${img.folder}')">
+                    <div class="image-container">
+                        <img src="${img.path}" alt="${img.name}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22250%22%3E%3Crect fill=%22%23ddd%22 width=%22300%22 height=%22250%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EImage non trouvée%3C/text%3E%3C/svg%3E'">
+                    </div>
+                    <div class="image-info">
+                        <div class="image-name">${img.name}</div>
+                        <div class="image-folder">📁 ${img.folder}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Ouvrir le modal
+        function openModal(path, name, folder) {
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modalImage');
+            const modalInfo = document.getElementById('modalInfo');
+            
+            modalImage.src = path;
+            modalInfo.innerHTML = `<strong>${name}</strong><br>📁 ${folder}`;
+            modal.classList.add('active');
+        }
+
+        // Fermer le modal
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // Lancer l'initialisation
+        init();
+    </script>
+</body>
+</html>
